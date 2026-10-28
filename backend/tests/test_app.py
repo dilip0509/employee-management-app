@@ -1,77 +1,92 @@
-import pytest
+
+
+import os
+import sys
 from unittest.mock import MagicMock, patch
+
+sys.path.insert(
+    0,
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
 from app import app
 
 
-@pytest.fixture
-def client():
+def make_mock_connection():
+    connection = MagicMock()
+    connection.__enter__.return_value = connection
+    return connection
+
+
+def test_home_endpoint():
     app.config["TESTING"] = True
     with app.test_client() as client:
-        yield client
-
-
-def test_home_endpoint(client):
-    response = client.get("/")
+        response = client.get("/")
     assert response.status_code == 200
 
 
-def test_version_endpoint(client):
-    response = client.get("/version")
+def test_version_endpoint():
+    with app.test_client() as client:
+        response = client.get("/version")
     assert response.status_code == 200
 
 
 @patch("app.get_connection")
-def test_health_endpoint(mock_connection, client):
-    mock_conn = MagicMock()
-    mock_connection.return_value = mock_conn
+def test_health_endpoint(mock_get_connection):
+    mock_connection = make_mock_connection()
+    mock_get_connection.return_value = mock_connection
 
-    response = client.get("/health")
+    with app.test_client() as client:
+        response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json["status"] == "healthy"
-    mock_conn.close.assert_called_once()
+    mock_connection.execute.assert_called_once()
 
 
 @patch("app.get_connection")
-def test_get_employees(mock_connection, client):
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_connection.return_value = mock_conn
-    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-    mock_cursor.fetchall.return_value = []
+def test_get_employees(mock_get_connection):
+    mock_connection = make_mock_connection()
+    mock_get_connection.return_value = mock_connection
+    mock_connection.execute.return_value.fetchall.return_value = []
 
-    response = client.get("/employees")
+    with app.test_client() as client:
+        response = client.get("/employees")
 
     assert response.status_code == 200
     assert response.json == []
 
 
-def test_create_employee_missing_fields(client):
-    response = client.post("/employees", json={"name": "Rahul"})
+def test_create_employee_missing_fields():
+    with app.test_client() as client:
+        response = client.post("/employees", json={"name": "Rahul"})
 
     assert response.status_code == 400
 
 
 @patch("app.get_connection")
-def test_create_employee(mock_connection, client):
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_connection.return_value = mock_conn
-    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-    mock_cursor.fetchone.return_value = (
-        1, "Rahul Sharma", "rahul@example.com", "DevOps", None
+def test_create_employee(mock_get_connection):
+    mock_connection = make_mock_connection()
+    mock_get_connection.return_value = mock_connection
+
+    mock_connection.execute.return_value.fetchone.return_value = (
+        1,
+        "Rahul Sharma",
+        "rahul@example.com",
+        "DevOps",
+        None,
     )
 
-    response = client.post(
-        "/employees",
-        json={
-            "name": "Rahul Sharma",
-            "email": "rahul@example.com",
-            "department": "DevOps",
-        },
-    )
+    with app.test_client() as client:
+        response = client.post(
+            "/employees",
+            json={
+                "name": "Rahul Sharma",
+                "email": "rahul@example.com",
+                "department": "DevOps",
+            },
+        )
 
-    assert response.status_code in (200, 201)
-    mock_conn.commit.assert_called_once()
+    assert response.status_code == 201
+    assert response.json["name"] == "Rahul Sharma"
 
