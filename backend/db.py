@@ -1,6 +1,4 @@
 
-
-cat > backend/db.py <<'EOF'
 import os
 import psycopg
 
@@ -13,4 +11,4 @@ def get_connection():
         user=os.getenv("DB_USER", "appuser"),
         password=os.getenv("DB_PASSWORD", ""),
     )
-EOF
+

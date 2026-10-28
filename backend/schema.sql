@@ -1,5 +1,4 @@
 
-cat > backend/schema.sql <<'EOF'
 CREATE TABLE IF NOT EXISTS employees (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -7,4 +6,4 @@ CREATE TABLE IF NOT EXISTS employees (
     department VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-EOF
+

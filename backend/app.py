@@ -1,6 +1,3 @@
-
-
-cat > backend/app.py <<'EOF'
 import os
 import re
 
@@ -187,4 +184,4 @@ def delete_employee(employee_id):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-EOF
+
