@@ -7,12 +7,14 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
+      - "sonar-project.properties"
   pull_request:
     branches:
       - main
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
+      - "sonar-project.properties"
 
 jobs:
   test:
@@ -44,3 +46,10 @@ jobs:
 
       - name: Run tests
         run: pytest -v
+      - name: SonarQube Scan
+        if: github.event_name == 'push' && github.ref == 'refs/head/main'
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        env: 
+          SONAR_TOKEN: $ {{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: $ {{ secrets.SONAR_HOST_URL }}
+
