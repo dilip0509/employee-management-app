@@ -46,6 +46,17 @@ jobs:
 
       - name: Run tests
         run: pytest -v
+      - name: Build Backend Docker Image
+        run: docker build -t employee-management-backend:${{ github.sha }} .
+      - name: Scan Docker Image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: employee-management-backend:${{ github.sha }}
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
       - name: SonarQube Scan
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: SonarSource/sonarqube-scan-action@v8.3.0
