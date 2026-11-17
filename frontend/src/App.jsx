@@ -1,122 +1,190 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [employees, setEmployees] = useState([])
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    department: ''
+  })
+  const [editingId, setEditingId] = useState(null)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  const loadEmployees = async () => {
+    try {
+      const response = await fetch('/employees')
+      if (!response.ok) throw new Error('Unable to load employees')
+      setEmployees(await response.json())
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadEmployees()
+  }, [])
+
+  const handleChange = (event) => {
+    setForm({ ...form, [event.target.name]: event.target.value })
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setMessage('')
+
+    const url = editingId
+      ? `/employees/${editingId}`
+      : '/employees'
+
+    try {
+      const response = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Operation failed')
+
+      setMessage(editingId ? 'Employee updated successfully!' : 'Employee added successfully!')
+      setForm({ name: '', email: '', department: '' })
+      setEditingId(null)
+      loadEmployees()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
+
+  const editEmployee = (employee) => {
+    setForm({
+      name: employee.name,
+      email: employee.email,
+      department: employee.department
+    })
+    setEditingId(employee.id)
+  }
+
+  const deleteEmployee = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this employee?')) return
+
+    try {
+      const response = await fetch(`/employees/${id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Unable to delete employee')
+
+      setMessage('Employee deleted successfully!')
+      loadEmployees()
+    } catch (error) {
+      setMessage(error.message)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <aside className="sidebar">
+        <h2>EMS</h2>
+        <p>Employee Management</p>
+        <div className="nav-item">▦ Dashboard</div>
+        <div className="nav-item active">♙ Employees</div>
+      </aside>
 
-      <div className="ticks"></div>
+      <main className="main">
+        <header>
+          <div>
+            <h1>Employee Management</h1>
+            <p>Manage your organization's employees</p>
+          </div>
+          <span className="admin">Admin</span>
+        </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="summary">
+          <div className="summary-card">
+            <span>Total Employees</span>
+            <h2>{employees.length}</h2>
+          </div>
+          <div className="summary-card">
+            <span>Departments</span>
+            <h2>{new Set(employees.map(e => e.department)).size}</h2>
+          </div>
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <section className="content">
+          <div className="form-card">
+            <h2>{editingId ? 'Edit Employee' : 'Add Employee'}</h2>
+            <form onSubmit={handleSubmit}>
+              <label>Full Name</label>
+              <input name="name" placeholder="Enter employee name"
+                value={form.name} onChange={handleChange} required />
+
+              <label>Email Address</label>
+              <input name="email" type="email" placeholder="Enter email"
+                value={form.email} onChange={handleChange} required />
+
+              <label>Department</label>
+              <input name="department" placeholder="Enter department"
+                value={form.department} onChange={handleChange} required />
+
+              <button type="submit">
+                {editingId ? 'Update Employee' : 'Add Employee'}
+              </button>
+
+              {editingId && (
+                <button type="button" className="cancel"
+                  onClick={() => {
+                    setEditingId(null)
+                    setForm({ name: '', email: '', department: '' })
+                  }}>
+                  Cancel
+                </button>
+              )}
+            </form>
+            {message && <p className="message">{message}</p>}
+          </div>
+
+          <div className="table-card">
+            <h2>Employee Directory</h2>
+            {loading ? <p>Loading employees...</p> : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Department</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employees.map(employee => (
+                      <tr key={employee.id}>
+                        <td>{employee.id}</td>
+                        <td>{employee.name}</td>
+                        <td>{employee.email}</td>
+                        <td>{employee.department}</td>
+                        <td>
+                          <button className="edit"
+                            onClick={() => editEmployee(employee)}>Edit</button>
+                          <button className="delete"
+                            onClick={() => deleteEmployee(employee.id)}>Delete</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {employees.length === 0 && (
+                      <tr><td colSpan="5">No employees found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
-
-export default App
