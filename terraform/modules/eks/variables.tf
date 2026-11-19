@@ -6,10 +6,7 @@ variable "kubernetes_version" {
   description = "kubernetes version for eks"
   type        = string
 }
-variable "vpc_id" {
-  description = "VPC ID for EKS cluster"
-  type        = string
-}
+
 variable "private_subnet_ids" {
   description = "private subnet IDs for EKS worker nodes"
   type        = list(string)

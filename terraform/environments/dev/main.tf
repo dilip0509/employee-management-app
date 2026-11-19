@@ -8,7 +8,6 @@ module "eks" {
   source             = "../../modules/eks"
   cluster_name       = var.cluster_name
   kubernetes_version = var.kubernetes_version
-  vpc_id             = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_id
   node_group_name    = var.node_group_name
   instance_types     = var.instance_types

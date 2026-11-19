@@ -13,7 +13,9 @@ resource "aws_subnet" "public" {
   availability_zone       = count.index == 0 ? "ap-south-1a" : "ap-south-1b"
   map_public_ip_on_launch = true
   tags = {
-    Name = "employee-management-public-${count.index + 1}"
+    Name                                            = "employee-management-public-${count.index + 1}"
+    "kubenretes.io/role/elb"                        = "1"
+    "kubernetes.io/cluster/employee-management-eks" = "shared"
 
   }
 
@@ -26,7 +28,10 @@ resource "aws_subnet" "private" {
   availability_zone = count.index == 0 ? "ap-south-1a" : "ap-south-1b"
   tags = {
 
-    Name = "employee-management-private-${count.index + 1}"
+    Name                                            = "employee-management-private-${count.index + 1}"
+    "kubernetes.io/role/internal-elb"               = "1"
+    "kubernetes.io/cluster/employee-management-eks" = "shared"
+
   }
 
 
@@ -67,4 +72,16 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 
 
+}
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.ap-south-1.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids = [
+    aws_route_table.private.id
+  ]
+  tags = {
+    Name = "employee-management-s3-point"
+
+  }
 }
