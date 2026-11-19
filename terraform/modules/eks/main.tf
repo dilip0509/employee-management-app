@@ -58,6 +58,7 @@ resource "aws_eks_cluster" "main" {
   "api",
   "audit",
   "authenticator"
+
 ]
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
