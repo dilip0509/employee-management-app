@@ -68,7 +68,7 @@ resource "aws_eks_cluster" "main" {
     subnet_ids              = var.private_subnet_ids
     endpoint_private_access = true
     endpoint_public_access  = true
-    public_access_cidrs      = ["13.127.162.45/32"]
+    public_access_cidrs     = ["13.127.162.45/32"]
   }
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy
