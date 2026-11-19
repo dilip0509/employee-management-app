@@ -98,7 +98,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker tag employee-management-frontend:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR-REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: SonarQube Scan
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: SonarSource/sonarqube-scan-action@v8.3.0
